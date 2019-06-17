@@ -33,6 +33,16 @@ $newpath = "$oldpath;$installPath"
 Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 }
 
+Write-Output "Checking Windows Defender Status..."
+$defender=cmd /c sc query Windefend
+if ( "$defender" -like "*RUNNING*" ){
+Write-Output "Defender is running, adding exclusions for adb..."
+Add-MpPreference -ExclusionPath $installPath
+Add-MpPreference -ExclusionProcess "adb.exe"
+} else {
+Write-Output "Defender is not running, skipping exclusions"
+}
+
 Write-Output "Downloading platform-tools-latest-windows.zip to $env:temp ..."
 Import-Module BitsTransfer
 Start-BitsTransfer -Source "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -Destination "$env:temp\platform-tools-latest-windows.zip"
