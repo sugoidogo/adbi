@@ -26,6 +26,16 @@ $installPath="C:\android-platform-tools"
 }
 Write-Output "installPath=$installPath"
 
+Write-Output "Checking Windows Defender Status..."
+$defender=cmd /c sc query Windefend
+if ( "$defender" -like "*RUNNING*" ){
+Write-Output "Defender is running, adding exclusions for adb..."
+Add-MpPreference -ExclusionPath $installPath
+Add-MpPreference -ExclusionProcess "adb.exe"
+} else {
+Write-Output "Defender is not running, skipping exclusions"
+}
+
 if(!$adb -and !$fastboot){
 Write-Output "Adding $installPath to `$PATH ..."
 $oldpath = (Get-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH).path
