@@ -40,6 +40,9 @@ Start-BitsTransfer -Source "https://dl.google.com/android/repository/platform-to
 Set-PSDebug -Off
 Expand-Archive -Path "$env:temp\platform-tools-latest-windows.zip" -DestinationPath "$env:temp" -Force
 Set-PSDebug -Trace 2
+if(-Not (Test-Path $installPath)){
+    mkdir $installPath
+}
 Copy-Item -Path "$env:temp\platform-tools\*" -Destination "$installPath\" -Force
 
 $shell.Popup("Done!")
