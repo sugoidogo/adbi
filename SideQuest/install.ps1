@@ -1,7 +1,11 @@
 Param( [Parameter(Position=0)] [String[]] $installPath )
 Set-PSDebug -Trace 2
 $ErrorActionPreference = 'Inquire'
+$localZip="$env:temp\platform-tools-latest-windows.zip"
+$remoteZip="https://dl.google.com/android/repository/platform-tools-latest-windows.zip"
 $shell = New-Object -ComObject Wscript.Shell
+$application= New-Object -ComObject shell.application
+$webClient = New-Object Net.WebClient
 $adb=Get-Command "adb" -ErrorAction SilentlyContinue
 $fastboot=Get-Command "fastboot" -ErrorAction SilentlyContinue
 
@@ -35,11 +39,10 @@ $newpath = "$oldpath;$installPath"
 Set-ItemProperty -Path 'Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment' -Name PATH -Value $newPath
 }
 
-Import-Module BitsTransfer
-Start-BitsTransfer -Source "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" -Destination "$env:temp\platform-tools-latest-windows.zip"
-Set-PSDebug -Off
-Expand-Archive -Path "$env:temp\platform-tools-latest-windows.zip" -DestinationPath "$env:temp" -Force
-Set-PSDebug -Trace 2
+$webClient.DownloadFile($remoteZip,$localZip)
+foreach ( $item in $application.NameSpace($localZip).items() ) {
+    $application.NameSpace("$env:temp").CopyHere($item,16)
+}
 if(-Not (Test-Path $installPath)){
     mkdir $installPath
 }
