@@ -6,11 +6,11 @@ import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class Install implements Runnable {
+public class FileInstall implements Runnable {
 	
 	private String installPath;
 
-	public Install(String path) {
+	public FileInstall(String path) {
 		installPath=path;
 	}
 
@@ -35,9 +35,7 @@ public class Install implements Runnable {
 				foStream.close();
 			}
 			
-			System.out.print(installPath);
-			
-			Common.installComplete=true;
+			Common.FileInstallComplete=true;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

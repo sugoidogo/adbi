@@ -1,6 +1,7 @@
 package josephsmendoza.android.sdk.platformTools.installer;
 
 import java.awt.GridLayout;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -24,7 +25,9 @@ public class GUI implements Runnable {
 		
 		frame=new JFrame("ADB Installer");
 		frame.setLayout(new BoxLayout(frame.getContentPane(),BoxLayout.Y_AXIS));
+		frame.setIconImage(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
 		
 		statusPanel=new JPanel();
 		statusPanel.setLayout(new GridLayout(0,1));
@@ -49,7 +52,7 @@ public class GUI implements Runnable {
 	@Override
 	public void run() {
 		int lastSize=0;
-		while (!Common.searchComplete) {
+		while (!Common.FileSearchComplete) {
 			if(lastSize<Common.installPaths.size()) {
 				update();
 				lastSize=Common.installPaths.size();
@@ -62,7 +65,7 @@ public class GUI implements Runnable {
 		}
 		statusPanel.remove(searchingLabel);
 		frame.pack();
-		while(!Common.installComplete) {
+		while(!Common.FileInstallComplete || !Common.PathInstallComplete) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {

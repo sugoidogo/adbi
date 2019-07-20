@@ -8,14 +8,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class FileSearch implements FileVisitor<Path>,Runnable {
-	
-	private String matchRegex=".*adb.exe|.*fastboot.exe";
-	private String skipRegex=".*Recycle\\.Bin|.*Temp.*";
-	private Path startPath=getRoot();
+public class FileSearch implements FileVisitor<Path>, Runnable {
+
+	private String matchRegex = ".*adb.exe|.*fastboot.exe";
+	private String skipRegex = ".*Recycle\\.Bin|.*Temp.*";
+	private Path startPath = getRoot();
 
 	private Path getRoot() {
-		if(Common.OS=="WIN"){
+		if (Common.OS == "WIN") {
 			return Paths.get("C:\\");
 		}
 		return Paths.get("/");
@@ -23,7 +23,7 @@ public class FileSearch implements FileVisitor<Path>,Runnable {
 
 	@Override
 	public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-		if(dir.toAbsolutePath().toString().matches(skipRegex)) {
+		if (dir.toAbsolutePath().toString().matches(skipRegex)) {
 			return FileVisitResult.SKIP_SUBTREE;
 		} else {
 			return FileVisitResult.CONTINUE;
@@ -32,8 +32,9 @@ public class FileSearch implements FileVisitor<Path>,Runnable {
 
 	@Override
 	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-		Path absolutePath=file.toAbsolutePath();
-		if(absolutePath.toString().matches(matchRegex))Common.installPaths.add((absolutePath.getParent().toString()));
+		Path absolutePath = file.toAbsolutePath();
+		if (absolutePath.toString().matches(matchRegex) && file.toFile().canExecute())
+			Common.installPaths.add((absolutePath.getParent().toString()));
 		return FileVisitResult.CONTINUE;
 	}
 
@@ -54,7 +55,7 @@ public class FileSearch implements FileVisitor<Path>,Runnable {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		Common.searchComplete=true;
+		Common.FileSearchComplete = true;
 	}
 
 }
