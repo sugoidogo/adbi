@@ -1,10 +1,9 @@
 plugins {
-    id 'java-library'
-    id "org.beryx.runtime" version "1.2.1" //https://plugins.gradle.org/plugin/org.beryx.runtime
+    id 'org.beryx.runtime' version "1.2.1" //https://plugins.gradle.org/plugin/org.beryx.runtime
 }
 
 sourceSets {
-	main.java.srcDirs += 'src'
+	main.java.srcDirs = [ 'src' ]
 }
 
 repositories {
@@ -14,8 +13,8 @@ repositories {
 }
 
 dependencies {
-	compile 'net.java.dev.jna:jna:5.3.1'
-	compile 'net.java.dev.jna:jna-platform:5.3.1'
+	implementation 'net.java.dev.jna:jna:5.3.1'
+	implementation 'net.java.dev.jna:jna-platform:5.3.1'
 }
 
 application {
