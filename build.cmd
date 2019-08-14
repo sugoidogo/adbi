@@ -1,0 +1,2 @@
+dub build --single adbi.d
+ptiso create -z lzma -c crc32 -x stub ptse_cmd.stub -x runas admin -x mount_system_visible 0 -x process_visible 1 -x run_relative 1 -x use_stderr 1 -x run_exe adbi.cmd -x icon adb.ico ADB-Installer.exe bin/windows/x86_64

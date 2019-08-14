@@ -8,31 +8,23 @@ copyFiles \
 	platform="windows"
 +/
 
-import tkd.tkdapplication;                               // Import Tkd.
+import tkd.tkdapplication;                               
 
-class Application : TkdApplication                       // Extend TkdApplication.
+class GUI : TkdApplication                       
 {
-	private void exitCommand(CommandArgs args)           // Create a callback.
+	override protected void initInterface()              
 	{
-		this.exit();                                     // Exit the application.
-	}
-
-	override protected void initInterface()              // Initialise user interface.
-	{
-		auto frame = new Frame(2, ReliefStyle.groove)    // Create a frame.
-			.pack(10);                                   // Place the frame.
-
-		auto label = new Label(frame, "Hello World!")    // Create a label.
-			.pack(10);                                   // Place the label.
-
-		auto exitButton = new Button(frame, "Exit")      // Create a button.
-			.setCommand(&this.exitCommand)               // Use the callback.
-			.pack(10);                                   // Place the button.
+		auto frame = new Frame().pack(5);
+		new Label(frame, "Select an install location").pack(0);
+		auto searchLabel=new Label(frame,"Searching for pre-existing files...").pack(0);
+		new Button(frame, "System").pack(0);
+		new Button(frame, "User").pack(0);
+		new Button(frame, "Mixed").pack(0);
 	}
 }
 
 void main(string[] args)
 {
-	auto app = new Application();                        // Create the application.
-	app.run();                                           // Run the application.
+	auto gui = new GUI();
+	gui.run();
 }
