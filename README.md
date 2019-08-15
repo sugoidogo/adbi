@@ -9,4 +9,4 @@ Icon is from [Google via icon-icons.com](https://icon-icons.com/icon/adb/90476)
 
 Windows version packaged with [Ptiso](https://pismotec.com/ptiso/)
 
-Linux version packanged with [UPX](https://upx.github.io/)
+Linux version packaged with [UPX](https://upx.github.io/)
