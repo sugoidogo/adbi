@@ -1,5 +1,4 @@
 /+ dub.sdl:
-dependency "vibe-d" version="~>0.8.5"
 targetPath "bin/$PLATFORM/$ARCH"
 +/
 
@@ -12,29 +11,37 @@ bool sys,user,silent,verbose;
 string installDir;
 
 int installTools(){
-	import std.zip,std.file,vibe.stream.operations,vibe.inet.urltransfer,std.conv : octal;
+	import std.zip,std.conv,std.file,std.net.curl,std.conv : octal;
 
 	version(Windows) string url="https://dl.google.com/android/repository/platform-tools-latest-windows.zip";
 	version(OSX) string url="https://dl.google.com/android/repository/platform-tools-latest-darwin.zip";
 	version(linux) string url="https://dl.google.com/android/repository/platform-tools-latest-linux.zip";
 
-	download(url, (scope data){
-		auto zip=new ZipArchive(data.readAll());
-		"Download complete".writeln();
-		foreach (x;zip.directory){
-			auto path=buildNormalizedPath(installDir,x.name[15 .. $]);
-			if(x.compressedSize!=0){
-				if(!path.dirName.exists) path.dirName.mkdirRecurse();
-				if(path.exists) path.remove();
-				zip.expand(x);
-				write(path, x.expandedData);
-				setAttributes(path,octal!775);
-			} else {
-				try if(path.isFile) path.remove;
-				catch (Exception e) path.mkdirRecurse;
-			}
+	ubyte[] data;
+	auto http=HTTP(url);
+	http.onReceive=(ubyte[] response){
+		data~=response;
+		return response.length;
+	};
+	http.perform();
+	"Download complete".writeln();
+	
+	auto zip=new ZipArchive(data);
+	foreach (x;zip.directory){
+		auto path=buildNormalizedPath(installDir,x.name[15 .. $]);
+		if(x.compressedSize!=0){
+			if(!path.dirName.exists) path.dirName.mkdirRecurse();
+			if(path.exists) path.remove();
+			zip.expand(x);
+			write(path, x.expandedData);
+			setAttributes(path,octal!775);
+		} else {
+			try if(path.isFile) {
+				path.remove;
+				path.mkdirRecurse;
+			} catch (Exception e) path.mkdirRecurse;
 		}
-	});
+	}
 	"Extraction complete".writeln();
 	return 0;
 }
