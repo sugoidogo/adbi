@@ -1,6 +1,3 @@
-/+ dub.sdl:
-targetPath "../bin/$PLATFORM/$ARCH"
-+/
 
 import std.stdio,std.getopt,std.path,std.file,std.regex,std.string,std.process,std.algorithm.searching;
 

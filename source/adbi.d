@@ -1,6 +1,3 @@
-/+ dub.sdl:
-targetPath "../bin/$PLATFORM/$ARCH"
-+/
 
 import std.path;
 
@@ -97,7 +94,7 @@ private void install(){
 	installPath();
 }
 
-private void mainA(string[] args){
+private void start(string[] args){
 	import std.getopt;
 	auto xargs=getopt(args,
 	"all-users|a","Install for all users.",&sys,
@@ -124,7 +121,7 @@ private string common(string args){
 }
 
 void main(string[] args){
-	try mainA(args);
+	try start(args);
 	catch (Exception e){
 		(cast(string)e.message).log(ERROR);
 	}

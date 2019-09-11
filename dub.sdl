@@ -1,0 +1,16 @@
+name "adbi"
+description "Android Debug Bridge Installer"
+authors "josephsmendoza"
+copyright "Copyright © 2019, josephsmendoza"
+license "GPL-3.0"
+targetType "executable"
+targetPath "bin/$PLATFORM/$ARCH"
+configuration "application" {
+    excludedSourceFiles "source/common.d"
+    preGenerateCommands "dub --config=common"
+    copyFiles "bin/$PLATFORM/$ARCH/common*"
+}
+configuration "common" {
+    targetName "common"
+    excludedSourceFiles "source/adbi.d"
+}
