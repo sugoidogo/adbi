@@ -6,11 +6,15 @@ license "GPL-3.0"
 targetType "executable"
 targetPath "bin/$PLATFORM/$ARCH"
 configuration "application" {
-    excludedSourceFiles "source/common.d"
-    preGenerateCommands "dub --config=common"
-    copyFiles "bin/$PLATFORM/$ARCH/common*"
+    excludedSourceFiles "source/cli.d"
+    dependency "tkd" version="1.1.13"
+    copyFiles \
+        "$TCLTK_PACKAGE_DIR/dist/$ARCH/tcl86t.dll" \
+        "$TCLTK_PACKAGE_DIR/dist/$ARCH/tk86t.dll" \
+        "$TCLTK_PACKAGE_DIR/dist/library" \
+        "C:/windows/system32/msvcr110.dll" \
+        platform="windows"
 }
-configuration "common" {
-    targetName "common"
-    excludedSourceFiles "source/adbi.d"
+configuration "cli" {
+    excludedSourceFiles "source/gui.d"
 }

@@ -1,20 +1,9 @@
 
 import std.path;
+import common;
 
-private bool sys,user,silent,verbose;
-private string installDir;
-private enum {INFO,VERBOSE,ERROR}
-
-private void log(string message,int level=INFO){
-	if((silent && level!=ERROR) || (!verbose && level==VERBOSE)) return;
-	if(level==ERROR){
-		import std.stdio : stderr;
-		stderr.writeln(message);
-		return;
-	}
-	import std.stdio : writeln;
-	writeln(message);
-}
+bool sys,user,silent,verbose;
+string installDir;
 
 private void installTools(){
 	import std.zip,std.file,std.net.curl,std.conv : octal;
@@ -63,7 +52,7 @@ private void installPath(){
 	}
 
 	version(Windows){
-		import std.windows.registry:Registry,Key;
+		import std.windows.registry:Registry,Key,REGSAM;
 		Key env;
 		if(user){
 			env=Registry.currentUser.getKey("Environment",REGSAM.KEY_ALL_ACCESS);
@@ -86,16 +75,22 @@ private void installPath(){
 	"logout/login or reboot to coplete install".log();
 }
 
-private void install(){
+void install(){
 	if(user) "Installing for current user".log();
 	if(sys) "Installing for all users".log();
 	("Installing to " ~ installDir).log(VERBOSE);
+	try{
 	installTools();
 	installPath();
+	} catch (Exception e){
+		log(cast(string)e.message,ERROR);
+	}
 }
 
-private void start(string[] args){
-	import std.getopt;
+void start(string[] args){
+	//foreach (string s;args) log(s,VERBOSE);
+	import std.getopt: getopt,defaultGetoptPrinter;
+	import common:userDir,allUsersDir,isUserDir;
 	auto xargs=getopt(args,
 	"all-users|a","Install for all users.",&sys,
 	"user|u","Install for current user.",&user,
@@ -104,25 +99,15 @@ private void start(string[] args){
 	"install-dir|i","Install to specified directory",&installDir);
 
 	if(sys && user) throw new Exception("--all-users and --user cannot be used together");
-	if(sys && !installDir) installDir=common("-a");
-	if(user && !installDir) installDir=common("-u");
-	if(installDir && !sys && !user) main([common("-f "~installDir)]);
+	if(sys && !installDir) installDir=allUsersDir;
+	if(user && !installDir) installDir=userDir;
+	if(installDir && !sys && !user) {
+		if(installDir.isUserDir) user=true;
+		else sys=true;
+	}
 	if(!installDir && !sys && !user) {
 		defaultGetoptPrinter("Download platform-tools and add to PATH.",xargs.options);
 		return;
 	}
 	install();
-}
-
-private string common(string args){
-	import std.process : execute;
-	import std.file : thisExePath;
-	return execute([thisExePath.dirName~dirSeparator~"common",args]).output;
-}
-
-void main(string[] args){
-	try start(args);
-	catch (Exception e){
-		(cast(string)e.message).log(ERROR);
-	}
 }

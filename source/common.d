@@ -1,22 +1,19 @@
 
-import std.stdio,std.getopt,std.path,std.file,std.regex,std.string,std.process,std.algorithm.searching;
+import std.stdio,std.concurrency,std.path,std.file,std.regex,std.string,std.process,std.algorithm.searching;
+import core.time;
 
 private string APPEND;
+private string ALL_USER_DIR;
+private string USER_DIR;
+version (Windows) string ENV_HOME="HOMEPATH";
+version (Posix) string ENV_HOME="HOME";
+enum {NONE,INFO,VERBOSE,ERROR};
+void function(string,int=INFO) log;
 
-int main(string[] args){
-    getopt(args,
-    "all-users|a",&allUsers,
-    "user|u",&user,
-    "search|s",&search,
-    "find-mode|f",&findMode);
-    return 0;
-}
-
-private void findMode(string opt,string installDir){
-    installDir=installDir.expandTilde.buildNormalizedPath.absolutePath;
-    string allHome="~".expandTilde.dirName;
-	if(allHome!=allHome.rootName && installDir.startsWith(allHome)) "--user".writeln;
-	else "--all-users".writeln;
+bool isUserDir(string installDir){
+    string allHome=environment.get(ENV_HOME).dirName;
+	if(allHome!=allHome.rootName && installDir.startsWith(allHome)) return true;
+	else return false;
 }
 
 private string append(){
@@ -26,21 +23,21 @@ private string append(){
     return APPEND;
 }
 
-private void allUsers(){
+string allUsersDir(){
     version(Windows) string dir="/Program Files";
     version(linux) string dir="/opt";
     version(OSX) string dir="/Library";
-    buildNormalizedPath(dir,append).writeln();
+    return buildNormalizedPath(dir,append);
 }
 
-private void user(){
-    version(Windows) string dir="~/AppData/Local";
+string userDir(){
+    version(Windows) string dir=environment.get(ENV_HOME)~"/AppData/Local";
     version(linux) string dir="~";
     version(OSX) string dir="~/Library";
-    buildNormalizedPath(dir.expandTilde,append).writeln();
+    return buildNormalizedPath(dir.expandTilde,append);
 }
 
-private void search(){
+void search(Tid parent){
     version (Windows){
         string regex="(.*)(\\\\)(adb.exe|fastboot.exe)($)";
         string[] dirs=["\\Program Files","\\Program Files (x86)",environment.get("HOMEPATH"),"\\"];
@@ -50,22 +47,33 @@ private void search(){
     version (Posix) dirs~=["~".expandTilde,"/"];
 
     string[] results;
+    bool stop;
     void search(DirEntry dir){
         try foreach(DirEntry d;dirEntries(dir.name,SpanMode.shallow)){
+            receiveTimeout(seconds(-1),
+                delegate(int i){
+                    if(i!=NONE) throw new Exception("Unsupported signal received by search thread");
+                    else stop=true;
+                }
+            );
+            if(stop) break;
             if(d.isDir) search(d);
             else if(d.name.matchFirst(regex)){
                 string s=d.name.dirName.strip;
                 if(!results.canFind(s) && s!=""){
                     results~=s;
-                    writeln(s);
+                    parent.send(s);
                 }
             }
         } catch (Exception e){
             std.stdio.stderr.writeln(e.message);
         }
     }
-
+    parent.send(allUsersDir);
+    parent.send(userDir);
+    results~=[allUsersDir,userDir];
     foreach (string dir;dirs){
         search(DirEntry(dir));
     }
+    parent.send(NONE);
 }
