@@ -1,113 +1,133 @@
+import std.path, std.process, std.algorithm.searching, std.stdio;
 
-import std.path;
-import common;
+private string APPEND;
+bool userMode;
+version (Windows) string HOME = "HOMEPATH";
+version (Posix) string HOME = "HOME";
+enum LogLevel {
+	SILENT,
+	silent = SILENT,
+	s = SILENT,
+	ERROR,
+	error = ERROR,
+	e = ERROR,
+	INFO,
+	info = INFO,
+	i = INFO,
+	VERBOSE,
+	verbose = VERBOSE,
+	v = VERBOSE
+}
 
-bool sys,user,silent,verbose;
-string installDir;
+alias SILENT = LogLevel.SILENT;
+alias ERROR = LogLevel.ERROR;
+alias INFO = LogLevel.INFO;
+alias VERBOSE = LogLevel.VERBOSE;
+LogLevel logLevel = INFO;
 
-private void installTools(){
-	import std.zip,std.file,std.net.curl,std.conv : octal;
+void function(string message, int messageMode = INFO) log;
 
-	version(Windows) string url="https://dl.google.com/android/repository/platform-tools-latest-windows.zip";
-	version(OSX) string url="https://dl.google.com/android/repository/platform-tools-latest-darwin.zip"; // @suppress(dscanner.suspicious.label_var_same_name)
-	version(linux) string url="https://dl.google.com/android/repository/platform-tools-latest-linux.zip"; // @suppress(dscanner.suspicious.label_var_same_name)
-	log("Downloading "~url,VERBOSE);
+private string append() {
+	if (!APPEND)
+		APPEND = buildNormalizedPath("Android", "SDK", "platform-tools");
+	return APPEND;
+}
+
+string defaultUserDir() {
+	version (Windows) string dir = "C:/" ~ environment.get(HOME) ~ "/AppData/Local";
+	version (linux) string dir = "~";
+	version (OSX) string dir = "~/Library";
+	return buildNormalizedPath(dir.expandTilde, append);
+}
+
+string defaultAllUsersDir() {
+	version (Windows) string dir = "C:/Program Files";
+	version (linux) string dir = "/opt";
+	version (OSX) string dir = "/Library";
+	return buildNormalizedPath(dir, append);
+}
+
+bool isUserDir(string installDir) {
+	return environment.get(HOME).canFind(installDir);
+}
+
+void installTools(string installDir) {
+	import std.zip, std.file, std.net.curl, std.conv;
+
+	version (Windows) string url = "https://dl.google.com/android/repository/platform-tools-latest-windows.zip";
+	version (OSX) string url = "https://dl.google.com/android/repository/platform-tools-latest-darwin.zip";
+	version (linux) string url = "https://dl.google.com/android/repository/platform-tools-latest-linux.zip";
+
+	log("Downloading");
+	log(url, VERBOSE);
 
 	ubyte[] data;
-	auto http=HTTP(url);
-	http.onReceive=(ubyte[] response){
-		data~=response;
+	auto http = HTTP(url);
+	http.onReceive = (ubyte[] response) {
+		data ~= response;
 		return response.length;
 	};
 	http.perform();
-	log("Download complete");
-	
-	auto zip=new ZipArchive(data);
-	foreach (x;zip.directory){
-		auto path=buildNormalizedPath(installDir,x.name[15 .. $]);
-		if(x.compressedSize!=0){
-			if(!path.dirName.exists) path.dirName.mkdirRecurse();
-			if(path.exists) path.remove();
-			zip.expand(x);
-			log("Extracting "~x.name,VERBOSE);
-			write(path, x.expandedData);
-			setAttributes(path,octal!775);
+
+	log("Extracting");
+	log(installDir, VERBOSE);
+
+	auto zip = new ZipArchive(data);
+	foreach (zipEntry; zip.directory) {
+		auto extractPath = buildNormalizedPath(installDir, zipEntry.name[15 .. $]);
+		if (zipEntry.compressedSize != 0) {
+			log(zipEntry.name, VERBOSE);
+			if (extractPath.exists) {
+				remove(extractPath);
+			} else if (!extractPath.dirName.exists)
+				mkdirRecurse(extractPath.dirName);
+			zip.expand(zipEntry);
+			write(extractPath, zipEntry.expandedData);
+			setAttributes(extractPath, octal!775);
 		} else {
-			try if(path.isFile) {
-				path.remove;
-				path.mkdirRecurse;
-			} catch (Exception e) path.mkdirRecurse;
+			if (extractPath.exists) {
+				if (extractPath.isFile) {
+					extractPath.remove();
+					extractPath.mkdir();
+				}
+			} else
+				extractPath.mkdirRecurse();
 		}
 	}
-	log("Extraction complete");
 }
 
-private void installPath(){
+void installPath(string installDir) {
 	import std.process : environment;
-	import std.algorithm.searching : canFind;
-	string path=environment.get("PATH");
-	if(path.canFind(installDir)){
-		"Install folder is already in PATH".log();
+
+	log("Adding to PATH");
+	string path = environment.get("PATH");
+	if (path.canFind(installDir)) {
+		log("Install folder is already in PATH");
 		return;
 	}
 
-	version(Windows){
-		import std.windows.registry:Registry,Key,REGSAM;
+	version (Windows) {
+		import std.windows.registry : Registry, Key, REGSAM;
+
 		Key env;
-		if(user){
-			env=Registry.currentUser.getKey("Environment",REGSAM.KEY_ALL_ACCESS);
+		if (userMode) {
+			env = Registry.currentUser.getKey("Environment", REGSAM.KEY_ALL_ACCESS);
+		} else {
+			env = Registry.localMachine.getKey("SYSTEM").getKey("CurrentControlSet").getKey("Control")
+				.getKey("Session Manager").getKey("Environment", REGSAM.KEY_ALL_ACCESS);
 		}
-		if(sys){
-			env=Registry.localMachine.getKey("SYSTEM").getKey("CurrentControlSet")
-				.getKey("Control").getKey("Session Manager").getKey("Environment",REGSAM.KEY_ALL_ACCESS);
-		}
-		path=env.getValue("Path").value_SZ;
-		path~=pathSeparator~installDir;
-		env.setValue("Path",path);
+		path = env.getValue("Path").value_SZ;
+		path ~= pathSeparator ~ installDir;
+		env.setValue("Path", path);
 		//import core.sys.windows.winuser; SendNotifyMessageW(HWND_BROADCAST,WM_SETTINGCHANGE,cast(ulong)null,cast(long)"Environment");
 	} else {
 		import std.file : append;
-		if(user) append("~/.profile".expandTilde,"\nexport PATH=$PATH"~pathSeparator~installDir);
-		if(sys) append("/etc/profile","\nexport PATH=$PATH"~pathSeparator~installDir);
+
+		if (user)
+			append("~/.profile".expandTilde, "\nexport PATH=$PATH" ~ pathSeparator ~ installDir);
+		if (sys)
+			append("/etc/profile", "\nexport PATH=$PATH" ~ pathSeparator ~ installDir);
 	}
 
-	"Install folder was added to PATH".log();
-	"logout/login or reboot to coplete install".log();
-}
-
-void install(){
-	if(user) "Installing for current user".log();
-	if(sys) "Installing for all users".log();
-	("Installing to " ~ installDir).log(VERBOSE);
-	try{
-	installTools();
-	installPath();
-	} catch (Exception e){
-		log(cast(string)e.message,ERROR);
-	}
-}
-
-void start(string[] args){
-	//foreach (string s;args) log(s,VERBOSE);
-	import std.getopt: getopt,defaultGetoptPrinter;
-	import common:userDir,allUsersDir,isUserDir;
-	auto xargs=getopt(args,
-	"all-users|a","Install for all users.",&sys,
-	"user|u","Install for current user.",&user,
-	"silent|s","Silent standard output.",&silent,
-	"verbose|v","Verbose standard output.",&verbose,
-	"install-dir|i","Install to specified directory",&installDir);
-
-	if(sys && user) throw new Exception("--all-users and --user cannot be used together");
-	if(sys && !installDir) installDir=allUsersDir;
-	if(user && !installDir) installDir=userDir;
-	if(installDir && !sys && !user) {
-		if(installDir.isUserDir) user=true;
-		else sys=true;
-	}
-	if(!installDir && !sys && !user) {
-		defaultGetoptPrinter("Download platform-tools and add to PATH.",xargs.options);
-		return;
-	}
-	install();
+	log("logout or reboot to finish install");
 }

@@ -5,6 +5,8 @@ copyright "Copyright © 2019, josephsmendoza"
 license "GPL-3.0"
 targetType "executable"
 targetPath "bin/$PLATFORM/$ARCH"
+excludedSourceFiles "common.d"
+dflags "-Llib/curl.lib" platform="windows"
 configuration "application" {
     excludedSourceFiles "source/cli.d"
     dependency "tkd" version="1.1.13"
@@ -13,6 +15,7 @@ configuration "application" {
         "$TCLTK_PACKAGE_DIR/dist/$ARCH/tk86t.dll" \
         "$TCLTK_PACKAGE_DIR/dist/library" \
         "C:/windows/system32/msvcr110.dll" \
+        "C:/windows/system32/vcruntime140.dll" \
         platform="windows"
 }
 configuration "cli" {
