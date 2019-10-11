@@ -18,7 +18,7 @@ class Application : TkdApplication {
             string regex = "(.*)(\\\\)(adb.exe|fastboot.exe)($)";
             string[] dirs = [
                 "C:\\Program Files", "C:\\Program Files (x86)",
-                environment.get("HOMEPATH"), "C:\\"
+                "C:"~environment.get("HOMEPATH"), "C:\\"
             ];
         } else
             string regex = "(.*)(\\/)(adb|fastboot)($)";
