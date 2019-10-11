@@ -84,8 +84,10 @@ class Application : TkdApplication {
         if (dir.isUserDir)
             adbi.userMode = true;
         try {
+            log("Please Wait", INSTRUCT);
             adbi.installTools(dir);
             adbi.installPath(dir);
+            log("You can close this window", INSTRUCT);
         } catch (Exception e) {
             log(cast(string) e.message, ERROR);
         }
@@ -106,8 +108,10 @@ class Application : TkdApplication {
             }).pack();
             break;
         case ERROR:
-            mode = INFO;
-            throw new Exception(message);
+            import std.stdio;
+
+            stderr.writeln(message);
+            break;
         default:
             break;
         }

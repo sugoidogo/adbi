@@ -48,7 +48,7 @@ string defaultAllUsersDir() {
 }
 
 bool isUserDir(string installDir) {
-	return environment.get(HOME).canFind(installDir);
+	return installDir.canFind(environment.get(HOME));
 }
 
 void installTools(string installDir) {
@@ -77,13 +77,14 @@ void installTools(string installDir) {
 		auto extractPath = buildNormalizedPath(installDir, zipEntry.name[15 .. $]);
 		if (zipEntry.compressedSize != 0) {
 			log(zipEntry.name, VERBOSE);
-			if (extractPath.exists) {
-				remove(extractPath);
+			if (extractPath.exists && extractPath.isDir) {
+				rmdirRecurse(extractPath);
 			} else if (!extractPath.dirName.exists)
 				mkdirRecurse(extractPath.dirName);
 			zip.expand(zipEntry);
-			write(extractPath, zipEntry.expandedData);
-			setAttributes(extractPath, octal!775);
+			extractPath.write(zipEntry.expandedData);
+			version (Posix)
+				setAttributes(extractPath, octal!775);
 		} else {
 			if (extractPath.exists) {
 				if (extractPath.isFile) {
@@ -121,12 +122,19 @@ void installPath(string installDir) {
 		env.setValue("Path", path);
 		//import core.sys.windows.winuser; SendNotifyMessageW(HWND_BROADCAST,WM_SETTINGCHANGE,cast(ulong)null,cast(long)"Environment");
 	} else {
-		import std.file : append;
+		import std.file : exists,append,write;
 
-		if (user)
-			append("~/.profile".expandTilde, "\nexport PATH=$PATH" ~ pathSeparator ~ installDir);
-		if (sys)
-			append("/etc/profile", "\nexport PATH=$PATH" ~ pathSeparator ~ installDir);
+		string profile;
+		string installProfile = "\nexport PATH=$PATH" ~ pathSeparator ~ installDir;
+		if (userMode)
+			profile = "~/.profile".expandTilde;
+		else
+			profile = "/etc/profile";
+		if (profile.exists)
+			append(profile, installProfile);
+		else {
+			write(profile, installProfile);
+		}
 	}
 
 	log("logout or reboot to finish install");
