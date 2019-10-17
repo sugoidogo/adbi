@@ -15,6 +15,7 @@ configuration "application" {
         "$TCLTK_PACKAGE_DIR/dist/library" \
         "C:/windows/system32/msvcr110.dll" \
         "C:/windows/system32/vcruntime140.dll" \
+        "lib/libcurl.dll" \
         platform="windows"
 }
 configuration "cli" {
