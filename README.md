@@ -7,6 +7,6 @@ This installer requires an internet connection.
 
 Icon is from [Google via icon-icons.com](https://icon-icons.com/icon/adb/90476)
 
-Windows version packaged with [Ptiso](https://pismotec.com/ptiso/)
+Windows version packaged with [7zip](https://www.7-zip.org/)
 
-Linux & Mac version packaged with [UPX](https://upx.github.io/)
+Linux & Mac version packaged with [makeself](https://makeself.io/)
