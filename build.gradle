@@ -1,0 +1,36 @@
+plugins {
+	id 'java'
+	id 'application'
+	id "org.beryx.runtime" version "1.8.0" //https://plugins.gradle.org/plugin/org.beryx.runtime
+}
+sourceSets.main.java.srcDirs = ['src']
+application.mainClassName = 'gui'
+repositories {
+	jcenter()
+	mavenCentral()
+	google()
+	maven { url 'https://jitpack.io' }
+}
+dependencies {
+	implementation 'info.picocli:picocli:4.2.0'
+}
+runtime {
+    options = ['--strip-debug','--no-header-files','--no-man-pages']
+    modules = ['java.desktop','jdk.crypto.ec']
+}
+task sfx(type: Exec,dependsOn: "runtime"){
+	int complevel=1
+	workingDir runtime.imageDir
+	String dest="../"+application.applicationName
+	if(System.getProperty("os.name").toLowerCase().startsWith("win")){
+		doFirst{
+			new File("build/image/setup.bat").text="@echo off\ncall bin/"+applicationName+".bat"
+		}
+		String stub="7zs2con.sfx"
+		executable "7z"
+		args "a",dest,"-mx"+complevel,"-sfx"+stub
+	}else{
+		executable "makeself"
+		args "--complevel",complevel,".",dest+".sh",application.applicationName,"bin/adbi"
+	}
+}
