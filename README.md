@@ -5,7 +5,7 @@ This is a re-implementation of the [15 seconds ADB Installer](https://forum.xda-
 
 This installer requires an internet connection.
 
-Icon is from [Google via icon-icons.com](https://icon-icons.com/icon/adb/90476)
+Icon is from [material.io](https://material.io/resources/icons/?icon=bug_report&style=baseline)
 
 Windows version packaged with [7zip](https://www.7-zip.org/)
 
