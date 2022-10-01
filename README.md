@@ -10,5 +10,6 @@ Icon is from [material.io](https://material.io/resources/icons/?icon=bug_report&
 Windows version packaged with [7zip](https://www.7-zip.org/)
 
 Linux & Mac version packaged with [makeself](https://makeself.io/)
-
-If you need any help, join the [discord](https://discord.gg/zxDnYSvMNw)
+## Support
+- Get support via [Discord](https://discord.gg/zxDnYSvMNw)
+- Give support via [PayPal](https://paypal.me/SugoiDogo)
