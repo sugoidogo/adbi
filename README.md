@@ -11,5 +11,5 @@ Windows version packaged with [7zip](https://www.7-zip.org/)
 
 Linux & Mac version packaged with [makeself](https://makeself.io/)
 ## Support
-- Get support via [Discord](https://discord.gg/zxDnYSvMNw)
+- Get support via [Discord](https://discord.gg/PbGT9tVWTC)
 - Give support via [PayPal](https://paypal.me/SugoiDogo)
