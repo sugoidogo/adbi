@@ -11,4 +11,4 @@ Windows version packaged with [7zip](https://www.7-zip.org/)
 
 Linux & Mac version packaged with [makeself](https://makeself.io/)
 ## Support
-Support information for all my software is on my [GitHub profile](github.com/sugoidogo)
+Support information for all my software is on my [GitHub profile](https://github.com/sugoidogo)
